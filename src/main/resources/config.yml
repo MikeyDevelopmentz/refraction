@@ -1,0 +1,53 @@
+debug:
+  logging: false
+
+alerts:
+  prefix: "<red>[Refraction] </red><gray>"
+  message: "<yellow><player></yellow> <gray>failed</gray> <red><check></red> <gray>(<details>)</gray>"
+  log-charge-format: "<dark_gray>[Refraction]</dark_gray> <gold>Charge:</gold> <white><player></white> <gray>charged anchor in</gray> <white><ms>ms</white>"
+  log-blowup-format: "<dark_gray>[Refraction]</dark_gray> <red>Blowup:</red> <gray>anchor at</gray> <white><location></white>"
+
+violation-threshold: 3
+
+messages:
+  fast-crystal:
+    place: "place: <delay>ms"
+    place-consistency: "place consistency: <variance>ms variance over <samples> samples"
+    break: "break: <delay>ms"
+    break-consistency: "break consistency: <variance>ms variance over <samples> samples"
+  auto-anchor:
+    charge: "charge: <delay>ms"
+    charge-consistency: "charge consistency: <variance>ms variance over <samples> samples"
+    suspicious: "consistent sub-<threshold>ms charges (<count> under <threshold>ms)"
+  auto-totem:
+    close: "Instant Close: <delay>ms"
+    open-click: "Instant Open-Click: <delay>ms"
+    reaction: "Fast Reaction: <delay>ms"
+    consistency: "Consistency: <variance>ms variance over <samples> samples"
+
+checks:
+  fast-crystal:
+    enabled: true
+    delay: 50
+    min-break-delay: 50
+    max-variance: 1
+    break-max-variance: 1
+    samples: 10
+    break-samples: 10
+  auto-anchor:
+    enabled: true
+    charge-delay: 50
+    void-after-ms: 150
+    suspicious-charge-ms: 100
+    suspicious-charge-count: 5
+    max-variance: 1
+    samples: 10
+    log-charges: true
+    log-blowups: true
+  auto-totem:
+    enabled: true
+    min-open-delay: 100
+    min-reaction-delay: 150
+    min-close-delay: 60
+    max-variance: 1
+    samples: 5

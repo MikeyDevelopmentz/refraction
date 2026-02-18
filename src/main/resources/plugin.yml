@@ -1,0 +1,19 @@
+name: Refraction
+version: 1.0
+main: me.mikey.refraction.Refraction
+api-version: '1.20'
+folia-supported: true
+commands:
+  alerts:
+    description: Toggle alerts
+    permission: refraction.alerts
+  refraction:
+    description: Main plugin command
+    permission: refraction.reload
+permissions:
+  refraction.alerts:
+    default: op
+  refraction.reload:
+    default: op
+  refraction.debug:
+    default: op

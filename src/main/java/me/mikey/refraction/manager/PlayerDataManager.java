@@ -1,8 +1,8 @@
 package me.mikey.refraction.manager;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import me.mikey.refraction.Refraction;
 import me.mikey.refraction.data.PlayerData;
 import org.bukkit.Bukkit;
@@ -13,40 +13,33 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 public class PlayerDataManager implements Listener {
-   private final Map<UUID, PlayerData> playerDataMap = new HashMap<>();
 
-   public PlayerDataManager(Refraction plugin) {
-      Bukkit.getPluginManager().registerEvents(this, plugin);
-      for (Player player : Bukkit.getOnlinePlayers()) {
-         this.add(player.getUniqueId());
-      }
-   }
+    private final Map<UUID, PlayerData> dataMap = new ConcurrentHashMap<>();
 
-   @EventHandler
-   public void onJoin(PlayerJoinEvent event) {
-      this.add(event.getPlayer().getUniqueId());
-   }
+    public PlayerDataManager(Refraction plugin) {
+        Bukkit.getPluginManager().registerEvents(this, plugin);
+        for (Player player : Bukkit.getOnlinePlayers()) dataMap.put(player.getUniqueId(), new PlayerData(player.getUniqueId()));
+    }
 
-   @EventHandler
-   public void onQuit(PlayerQuitEvent event) {
-      this.remove(event.getPlayer().getUniqueId());
-   }
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event) {
+        dataMap.put(event.getPlayer().getUniqueId(), new PlayerData(event.getPlayer().getUniqueId()));
+    }
 
-   public void add(UUID uuid) {
-      this.playerDataMap.put(uuid, new PlayerData(uuid));
-   }
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        dataMap.remove(event.getPlayer().getUniqueId());
+    }
 
-   public void remove(UUID uuid) {
-      this.playerDataMap.remove(uuid);
-   }
+    public PlayerData get(Player player) {
+        return dataMap.get(player.getUniqueId());
+    }
 
-   public PlayerData get(Player player) {
-      return this.playerDataMap.get(player.getUniqueId());
-   }
+    public PlayerData get(UUID uuid) {
+        return dataMap.get(uuid);
+    }
 
-   public void resetAllViolations() {
-      for (PlayerData data : playerDataMap.values()) {
-         data.resetAllViolations();
-      }
-   }
+    public void resetAllViolations() {
+        dataMap.values().forEach(PlayerData::resetAllViolations);
+    }
 }

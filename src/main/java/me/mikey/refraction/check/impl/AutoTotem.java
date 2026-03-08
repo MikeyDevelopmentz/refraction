@@ -15,98 +15,78 @@ import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 
 public class AutoTotem extends Check {
-   private static final long NANOS_PER_MS = 1_000_000L;
 
-   public AutoTotem(Refraction plugin) {
-      super(plugin);
-   }
+    public AutoTotem(Refraction plugin) {
+        super(plugin);
+    }
 
-   @EventHandler(ignoreCancelled = true)
-   public void onDamage(EntityDamageEvent event) {
-      if (event.getEntity() instanceof Player) {
-         PlayerData data = getData((Player) event.getEntity());
-         if (data != null) {
-            data.lastDamageTaken = System.nanoTime();
-         }
-      }
-   }
+    @EventHandler(ignoreCancelled = true)
+    public void onDamage(EntityDamageEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+        PlayerData data = getData(player);
+        if (data != null) data.lastDamageTaken = System.nanoTime();
+    }
 
-   @EventHandler
-   public void onInventoryOpen(InventoryOpenEvent event) {
-      if (event.getPlayer() instanceof Player) {
-         PlayerData data = getData((Player) event.getPlayer());
-         if (data != null) {
-            data.lastInventoryOpen = System.nanoTime();
-         }
-      }
-   }
+    @EventHandler
+    public void onInventoryOpen(InventoryOpenEvent event) {
+        if (!(event.getPlayer() instanceof Player player)) return;
+        PlayerData data = getData(player);
+        if (data != null) data.lastInventoryOpen = System.nanoTime();
+    }
 
-   @EventHandler
-   public void onInventoryClose(InventoryCloseEvent event) {
-      CachedConfig.AutoTotem cfg = plugin.getCachedConfig().getAutoTotem();
-      if (!cfg.enabled) return;
-      if (!(event.getPlayer() instanceof Player)) return;
-      Player player = (Player) event.getPlayer();
-      PlayerData data = getData(player);
-      if (data == null) return;
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        CachedConfig.AutoTotem cfg = plugin.getCachedConfig().getAutoTotem();
+        if (!cfg.enabled) return;
+        if (!(event.getPlayer() instanceof Player player)) return;
+        PlayerData data = getData(player);
+        if (data == null) return;
 
-      long nowNanos = System.nanoTime();
-      long diffMs = (nowNanos - data.lastTotemMove) / NANOS_PER_MS;
-      if (diffMs < cfg.minCloseDelay) {
-         String msg = CachedConfig.replace(cfg.messageClose, "delay", diffMs);
-         alert(player, msg);
-      }
-   }
+        long diffMs = (System.nanoTime() - data.lastTotemMove) / NS_PER_MS;
+        if (diffMs < cfg.minCloseDelay)
+            alert(player, CachedConfig.replace(cfg.messageClose, "delay", diffMs));
+    }
 
-   @EventHandler(ignoreCancelled = true)
-   public void onInventoryClick(InventoryClickEvent event) {
-      CachedConfig.AutoTotem cfg = plugin.getCachedConfig().getAutoTotem();
-      if (!cfg.enabled) return;
-      if (!(event.getWhoClicked() instanceof Player)) return;
-      Player player = (Player) event.getWhoClicked();
-      PlayerData data = getData(player);
-      if (data == null) return;
+    @EventHandler(ignoreCancelled = true)
+    public void onInventoryClick(InventoryClickEvent event) {
+        CachedConfig.AutoTotem cfg = plugin.getCachedConfig().getAutoTotem();
+        if (!cfg.enabled) return;
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        PlayerData data = getData(player);
+        if (data == null) return;
 
-      InventoryType type = event.getInventory().getType();
-      boolean isPlayerInventory = type == InventoryType.CRAFTING || type == InventoryType.PLAYER;
+        InventoryType type = event.getInventory().getType();
+        boolean isPlayerInventory = type == InventoryType.CRAFTING || type == InventoryType.PLAYER;
 
-      boolean isTotem = (event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.TOTEM_OF_UNDYING)
-              || (event.getCursor() != null && event.getCursor().getType() == Material.TOTEM_OF_UNDYING);
-      if (!isTotem) return;
+        boolean isTotem = (event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.TOTEM_OF_UNDYING)
+            || (event.getCursor() != null && event.getCursor().getType() == Material.TOTEM_OF_UNDYING);
+        if (!isTotem) return;
 
-      long nowNanos = System.nanoTime();
+        long now = System.nanoTime();
 
-      if (!isPlayerInventory) {
-         long openToClickMs = (nowNanos - data.lastInventoryOpen) / NANOS_PER_MS;
-         if (openToClickMs < 10000 && openToClickMs < cfg.minOpenDelay) {
-            String msg = CachedConfig.replace(cfg.messageOpenClick, "delay", openToClickMs);
-            alert(player, msg);
-         }
-      }
+        if (!isPlayerInventory) {
+            long openToClickMs = (now - data.lastInventoryOpen) / NS_PER_MS;
+            if (openToClickMs < 10000 && openToClickMs < cfg.minOpenDelay)
+                alert(player, CachedConfig.replace(cfg.messageOpenClick, "delay", openToClickMs));
+        }
 
-      long reactionMs = (nowNanos - data.lastDamageTaken) / NANOS_PER_MS;
-      if (reactionMs < cfg.minReactionDelay) {
-         String msg = CachedConfig.replace(cfg.messageReaction, "delay", reactionMs);
-         alert(player, msg);
-      }
+        long reactionMs = (now - data.lastDamageTaken) / NS_PER_MS;
+        if (reactionMs < cfg.minReactionDelay)
+            alert(player, CachedConfig.replace(cfg.messageReaction, "delay", reactionMs));
 
-      if ((nowNanos - data.lastDamageTaken) / NANOS_PER_MS < 2000L) {
-         data.totemDelays.add(reactionMs);
-         if (data.totemDelays.size() > cfg.samples) {
-            data.totemDelays.removeFirst();
-         }
-         if (data.totemDelays.size() == cfg.samples) {
-            long maxDelay = Collections.max(data.totemDelays);
-            long minDelay = Collections.min(data.totemDelays);
-            long variance = maxDelay - minDelay;
-            if (variance <= cfg.maxVariance) {
-               String msg = CachedConfig.replace(CachedConfig.replace(cfg.messageConsistency, "variance", variance), "samples", cfg.samples);
-               alert(player, msg);
-               data.totemDelays.clear();
+        if ((now - data.lastDamageTaken) / NS_PER_MS < 2000L) {
+            data.totemDelays.add(reactionMs);
+            if (data.totemDelays.size() > cfg.samples) data.totemDelays.removeFirst();
+            if (data.totemDelays.size() == cfg.samples) {
+                long variance = Collections.max(data.totemDelays) - Collections.min(data.totemDelays);
+                if (variance <= cfg.maxVariance) {
+                    alert(player, CachedConfig.replace(
+                        CachedConfig.replace(cfg.messageConsistency, "variance", variance), "samples", cfg.samples));
+                    data.totemDelays.clear();
+                }
             }
-         }
-      }
+        }
 
-      data.lastTotemMove = nowNanos;
-   }
+        data.lastTotemMove = now;
+    }
 }

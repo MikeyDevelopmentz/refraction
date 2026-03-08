@@ -88,31 +88,17 @@ public class CachedConfig {
 
    public static final class AutoAnchor {
       public boolean enabled = true;
-      public long chargeDelay = 50L;
-      public long voidAfterMs = 150L;
-      public long suspiciousMs = 100L;
-      public int suspiciousCount = 5;
-      public long maxVariance = 1L;
-      public int samples = 10;
+      public long voidAfterMs = 5000L; // if theres a big gap between charges we dont count it
+      public int subTickStreakThreshold = 5; // how many <16ms charges in a row before we flag
       public boolean logCharges = true;
       public boolean logBlowups = true;
-      public String messageCharge = "charge: <delay>ms";
-      public String messageChargeConsistency = "charge consistency: <variance>ms variance over <samples> samples";
-      public String messageSuspicious = "consistent sub-<threshold>ms charges (<count> under <threshold>ms)";
 
       void reload(FileConfiguration config, Logger logger) {
          enabled = config.getBoolean("checks.auto-anchor.enabled", true);
-         chargeDelay = clampLong(config.getLong("checks.auto-anchor.charge-delay", 50L), MIN_DELAY);
-         voidAfterMs = clampLong(config.getLong("checks.auto-anchor.void-after-ms", 150L), MIN_DELAY);
-         suspiciousMs = clampLong(config.getLong("checks.auto-anchor.suspicious-charge-ms", 100L), MIN_DELAY);
-         suspiciousCount = clamp(config.getInt("checks.auto-anchor.suspicious-charge-count", 5), 1, 50);
-         maxVariance = clampLong(config.getLong("checks.auto-anchor.max-variance", 1L), MIN_DELAY);
-         samples = clamp(config.getInt("checks.auto-anchor.samples", 10), MIN_SAMPLES, MAX_SAMPLES);
+         voidAfterMs = clampLong(config.getLong("checks.auto-anchor.void-after-ms", 5000L), MIN_DELAY);
+         subTickStreakThreshold = (int) clampLong(config.getLong("checks.auto-anchor.sub-tick-streak-threshold", 5L), 2L);
          logCharges = config.getBoolean("checks.auto-anchor.log-charges", true);
          logBlowups = config.getBoolean("checks.auto-anchor.log-blowups", true);
-         messageCharge = config.getString("messages.auto-anchor.charge", messageCharge);
-         messageChargeConsistency = config.getString("messages.auto-anchor.charge-consistency", messageChargeConsistency);
-         messageSuspicious = config.getString("messages.auto-anchor.suspicious", messageSuspicious);
       }
    }
 

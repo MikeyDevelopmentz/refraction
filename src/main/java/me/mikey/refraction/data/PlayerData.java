@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.UUID;
+import me.mikey.refraction.profile.TimingProfile;
 import org.bukkit.Location;
 
 public class PlayerData {
@@ -12,11 +13,12 @@ public class PlayerData {
    public long lastCrystalBreak = 0L;
    public Location lastCrystalLocation = null;
    public LinkedList<Long> crystalBreakDelays = new LinkedList<>();
-   public long lastAnchorPlace = 0L;
+   public long lastAnchorChargeNano = 0L;
+   public int anchorSubTickStreak = 0;
    public long lastInventoryOpen = 0L;
    public long lastDamageTaken = 0L;
    public long lastTotemMove = 0L;
-   public LinkedList<Long> anchorDelays = new LinkedList<>();
+   public TimingProfile anchorChargeProfile = new TimingProfile();
    public LinkedList<Long> crystalDelays = new LinkedList<>();
    public LinkedList<Long> totemDelays = new LinkedList<>();
    public boolean alertsEnabled = true;

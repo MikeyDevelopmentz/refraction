@@ -2,6 +2,7 @@ package me.mikey.refraction.manager;
 
 import me.mikey.refraction.Refraction;
 import me.mikey.refraction.data.PlayerData;
+import me.mikey.refraction.profile.SuspicionScore;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -46,6 +47,12 @@ public class AlertManager {
       Bukkit.getConsoleSender().sendMessage(message);
    }
 
+   public void sendAlert(Player player, String checkName, String details, SuspicionScore score) {
+      String levelTag = score.getLevel() == SuspicionScore.Level.HIGH ? "red" : "yellow";
+      String scoredDetails = details + " | <" + levelTag + ">" + score.format() + "</" + levelTag + ">";
+      sendAlert(player, checkName, scoredDetails);
+   }
+
    public void sendAlert(Player player, String checkName, String details) {
       String prefixFormat = Refraction.getInstance().getConfig().getString("alerts.prefix", "<red>[Refraction] </red><gray>");
       String messageFormat = Refraction.getInstance().getConfig().getString("alerts.message", "<yellow><player></yellow> <gray>failed</gray> <red><check></red> <gray>(<details>)</gray>");
@@ -53,7 +60,7 @@ public class AlertManager {
       TagResolver resolver = TagResolver.resolver(
          Placeholder.unparsed("player", player.getName()),
          Placeholder.unparsed("check", checkName),
-         Placeholder.unparsed("details", details)
+         Placeholder.parsed("details", details)
       );
 
       Component prefix = MINI.deserialize(prefixFormat);

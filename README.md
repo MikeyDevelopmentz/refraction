@@ -1,31 +1,28 @@
 # Refraction
 
-Crystal PvP anticheat for Paper and Folia servers (1.20+).
+Crystal PvP anticheat for Paper servers (1.21+).
 
-Monitors end crystal placement/breaking, respawn anchor charging, and totem swapping for inhuman speeds and suspiciously consistent timing patterns.
+Monitors end crystal placement/breaking, respawn anchor charging, and totem swapping for inhuman speeds and suspiciously consistent timing.
 
 ## Checks
 
-**FastCrystal** - Flags players placing or breaking end crystals faster than the configured threshold. Tracks delay variance across a sample window to catch automation that produces unnaturally consistent timing.
+**FastCrystal** - flags players placing or breaking end crystals faster than the configured threshold. tracks delay variance across a sample window to catch automation with unnaturally consistent timing.
 
-**AutoAnchor** - Flags fast anchor charges after placement. Detects repeated sub-threshold charge times and low-variance patterns across samples. Optional debug logging for individual charge/blowup events.
+**AutoAnchor** - adaptive profile-based anchor detection. builds a baseline of each players charge speed over 20 samples, then flags if they suddenly become way faster than their own average or if their timing is too consistent to be human. ignores sub-tick noise from keybinds, but flags sustained sub-tick streaks (bots spamming charges faster than one server tick).
 
-**AutoTotem** - Flags instant totem swaps by measuring inventory open-to-click time, damage-to-swap reaction time, and inventory close speed. Variance tracking catches scripts that produce robotic consistency.
-
-All checks use `System.nanoTime()` for precision. Each check has a configurable violation threshold before alerts fire.
+**AutoTotem** - flags instant totem swaps by measuring inventory open-to-click time, damage reaction time, and close speed. variance tracking catches scripts with robotic consistency.
 
 ## Commands
 
 | Command | Permission | Description |
 |---|---|---|
-| `/refraction reload` | `refraction.reload` | Reload config and reset violations |
-| `/refraction status` | `refraction.reload` | Show current check configuration |
-| `/refraction debug on/off` | `refraction.debug` | Toggle debug logging |
-| `/alerts` | `refraction.alerts` | Toggle alert messages for yourself |
+| `/refraction reload` | `refraction.reload` | reload config and reset violations |
+| `/refraction status` | `refraction.reload` | show current check settings |
+| `/refraction debug on/off` | `refraction.debug` | toggle debug logging |
+| `/refraction profile <player>` | `refraction.reload` | show a players anchor profile and violation counts |
+| `/alerts` | `refraction.alerts` | toggle alert messages for yourself |
 
 ## Config
-
-Thresholds, sample sizes, variance limits, and alert formats are all configurable in `config.yml`. Messages use MiniMessage formatting.
 
 ```yaml
 checks:
@@ -34,13 +31,13 @@ checks:
     delay: 50            # min ms between crystal placements
     min-break-delay: 50  # min ms between crystal breaks
     max-variance: 1      # max ms variance to flag consistency
-    samples: 10          # sample window size
+    samples: 10
   auto-anchor:
     enabled: true
-    charge-delay: 50
-    void-after-ms: 150   # ignore charges older than this after placement
-    suspicious-charge-ms: 100
-    suspicious-charge-count: 5
+    void-after-ms: 5000          # ignore if its been this long since last charge
+    sub-tick-streak-threshold: 5 # consecutive <16ms charges before flagging
+    log-charges: true
+    log-blowups: true
   auto-totem:
     enabled: true
     min-open-delay: 100
@@ -50,13 +47,13 @@ checks:
 
 ## Building
 
-Requires Java 17+.
+Requires Java 21.
 
 ```
 mvn clean package
 ```
 
-Drop the jar into your `plugins/` folder.
+Drop the jar into `plugins/`.
 
 ## License
 

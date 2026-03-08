@@ -15,10 +15,6 @@ messages:
     place-consistency: "place consistency: <variance>ms variance over <samples> samples"
     break: "break: <delay>ms"
     break-consistency: "break consistency: <variance>ms variance over <samples> samples"
-  auto-anchor:
-    charge: "charge: <delay>ms"
-    charge-consistency: "charge consistency: <variance>ms variance over <samples> samples"
-    suspicious: "consistent sub-<threshold>ms charges (<count> under <threshold>ms)"
   auto-totem:
     close: "Instant Close: <delay>ms"
     open-click: "Instant Open-Click: <delay>ms"
@@ -36,12 +32,8 @@ checks:
     break-samples: 10
   auto-anchor:
     enabled: true
-    charge-delay: 50
-    void-after-ms: 150
-    suspicious-charge-ms: 100
-    suspicious-charge-count: 5
-    max-variance: 1
-    samples: 10
+    void-after-ms: 5000        # ignore if more than this many ms between charges (player took a break)
+    sub-tick-streak-threshold: 5  # how many <16ms charges in a row before flagging
     log-charges: true
     log-blowups: true
   auto-totem:
